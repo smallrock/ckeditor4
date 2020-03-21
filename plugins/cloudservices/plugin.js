@@ -3,12 +3,12 @@
  * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
  */
 
-( function() {
+(function () {
 	'use strict';
 
-	CKEDITOR.plugins.add( 'cloudservices', {
+	CKEDITOR.plugins.add('cloudservices', {
 		requires: 'filetools,ajax',
-		onLoad: function() {
+		onLoad: function () {
 			var FileLoader = CKEDITOR.fileTools.fileLoader;
 
 			/**
@@ -32,8 +32,8 @@
 			 * @param {String} [token] A token used for the [CKEditor Cloud Services](https://ckeditor.com/ckeditor-cloud-services/) request.
 			 * If skipped, {@link CKEDITOR.config#cloudServices_tokenUrl} will be used to request a token.
 			 */
-			function CloudServicesLoader( editor, fileOrData, fileName, token ) {
-				FileLoader.call( this, editor, fileOrData, fileName );
+			function CloudServicesLoader(editor, fileOrData, fileName, token) {
+				FileLoader.call(this, editor, fileOrData, fileName);
 
 				/**
 				 * Custom [CKEditor Cloud Services](https://ckeditor.com/ckeditor-cloud-services/) token.
@@ -44,7 +44,7 @@
 				this.customToken = token;
 			}
 
-			CloudServicesLoader.prototype = CKEDITOR.tools.extend( {}, FileLoader.prototype );
+			CloudServicesLoader.prototype = CKEDITOR.tools.extend({}, FileLoader.prototype);
 
 			/**
 			 * @inheritdoc
@@ -52,15 +52,15 @@
 			 * @param {Object} [additionalRequestParameters] Additional data that would be passed to the
 			 * {@link CKEDITOR.editor#fileUploadRequest} event.
 			 */
-			CloudServicesLoader.prototype.upload = function( url, additionalRequestParameters ) {
+			CloudServicesLoader.prototype.upload = function (url, additionalRequestParameters) {
 				url = url || this.editor.config.cloudServices_uploadUrl;
 
-				if ( !url ) {
-					CKEDITOR.error( 'cloudservices-no-upload-url' );
+				if (!url) {
+					CKEDITOR.error('cloudservices-no-upload-url');
 					return;
 				}
 
-				FileLoader.prototype.upload.call( this, url, additionalRequestParameters );
+				FileLoader.prototype.upload.call(this, url, additionalRequestParameters);
 			};
 
 			/**
@@ -74,7 +74,7 @@
 			CKEDITOR.plugins.cloudservices.cloudServicesLoader = CloudServicesLoader;
 		},
 
-		beforeInit: function( editor ) {
+		beforeInit: function (editor) {
 			var tokenUrl = editor.config.cloudServices_tokenUrl,
 				tokenFetcher = {
 					token: null,
@@ -82,70 +82,70 @@
 					// Allow external code (tests) to affect token refresh interval if needed.
 					REFRESH_INTERVAL: editor.CLOUD_SERVICES_TOKEN_INTERVAL || 3600000,
 
-					refreshToken: function() {
-						CKEDITOR.ajax.load( tokenUrl, function( token ) {
-							if ( token ) {
+					refreshToken: function () {
+						CKEDITOR.ajax.load(tokenUrl, function (token) {
+							if (token) {
 								tokenFetcher.token = token;
 							}
-						} );
+						});
 					},
 
-					init: function() {
+					init: function () {
 						this.refreshToken();
 
-						var intervalId = window.setInterval( this.refreshToken, this.REFRESH_INTERVAL );
+						var intervalId = window.setInterval(this.refreshToken, this.REFRESH_INTERVAL);
 
-						editor.once( 'destroy', function() {
-							window.clearInterval( intervalId );
-						} );
+						editor.once('destroy', function () {
+							window.clearInterval(intervalId);
+						});
 					}
 				};
 
-			if ( !tokenUrl ) {
-				CKEDITOR.error( 'cloudservices-no-token-url' );
+			if (!tokenUrl) {
+				CKEDITOR.error('cloudservices-no-token-url');
 			} else {
 				tokenFetcher.init();
 			}
 
-			editor.on( 'fileUploadRequest', function( evt ) {
+			editor.on('fileUploadRequest', function (evt) {
 				var fileLoader = evt.data.fileLoader,
 					reqData = evt.data.requestData,
 					token = fileLoader.customToken || tokenFetcher.token;
 
-				if ( fileLoader instanceof CKEDITOR.plugins.cloudservices.cloudServicesLoader ) {
+				if (fileLoader instanceof CKEDITOR.plugins.cloudservices.cloudServicesLoader) {
 					// Cloud Services expect file to be put as a "file" property.
 					reqData.file = reqData.upload;
 					delete reqData.upload;
 
-					if ( !token ) {
-						CKEDITOR.error( 'cloudservices-no-token' );
+					if (!token) {
+						CKEDITOR.error('cloudservices-no-token');
 						evt.cancel();
 						return;
 					}
 					// Add authorization token.
-					evt.data.fileLoader.xhr.setRequestHeader( 'Authorization', token );
+					evt.data.fileLoader.xhr.setRequestHeader('Authorization', token);
 				}
-			}, null, null, 6 );
+			}, null, null, 6);
 
-			editor.on( 'fileUploadResponse', function( evt ) {
+			editor.on('fileUploadResponse', function (evt) {
 				var fileLoader = evt.data.fileLoader,
 					xhr = fileLoader.xhr,
 					response;
 
-				if ( fileLoader instanceof CKEDITOR.plugins.cloudservices.cloudServicesLoader ) {
+				if (fileLoader instanceof CKEDITOR.plugins.cloudservices.cloudServicesLoader) {
 					evt.stop();
 
 					try {
-						response = JSON.parse( xhr.responseText );
+						response = JSON.parse(xhr.responseText);
 
 						evt.data.response = response;
-					} catch ( e ) {
-						CKEDITOR.warn( 'filetools-response-error', { responseText: xhr.responseText } );
+					} catch (e) {
+						CKEDITOR.warn('filetools-response-error', { responseText: xhr.responseText });
 					}
 				}
-			} );
+			});
 		}
-	} );
+	});
 
 	CKEDITOR.plugins.cloudservices = {
 		// Note this type is loaded on runtime.
@@ -197,4 +197,4 @@
 	 * @cfg {String} [cloudServices_tokenUrl='']
 	 * @member CKEDITOR.config
 	 */
-} )();
+})();

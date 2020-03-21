@@ -5,11 +5,11 @@
 
 'use strict';
 
-( function() {
-	CKEDITOR.plugins.add( 'filetools', {
+(function () {
+	CKEDITOR.plugins.add('filetools', {
 		lang: 'az,bg,ca,cs,da,de,de-ch,en,en-au,eo,es,es-mx,et,eu,fa,fr,gl,hr,hu,id,it,ja,km,ko,ku,lv,nb,nl,no,oc,pl,pt,pt-br,ro,ru,sk,sq,sr,sr-latn,sv,tr,ug,uk,zh,zh-cn', // %REMOVE_LINE_CORE%
 
-		beforeInit: function( editor ) {
+		beforeInit: function (editor) {
 			/**
 			 * An instance of the {@link CKEDITOR.fileTools.uploadRepository upload repository}.
 			 * It allows you to create and get {@link CKEDITOR.fileTools.fileLoader file loaders}.
@@ -22,7 +22,7 @@
 			 * @property {CKEDITOR.fileTools.uploadRepository} uploadRepository
 			 * @member CKEDITOR.editor
 			 */
-			editor.uploadRepository = new UploadRepository( editor );
+			editor.uploadRepository = new UploadRepository(editor);
 
 			/**
 			 * Event fired when the {@link CKEDITOR.fileTools.fileLoader file loader} should send XHR. If the event is not
@@ -36,44 +36,44 @@
 			 * @param {CKEDITOR.fileTools.fileLoader} data.fileLoader A file loader instance.
 			 * @param {Object} data.requestData An object containing all data to be sent to the server.
 			 */
-			editor.on( 'fileUploadRequest', function( evt ) {
+			editor.on('fileUploadRequest', function (evt) {
 				var fileLoader = evt.data.fileLoader;
 
-				fileLoader.xhr.open( 'POST', fileLoader.uploadUrl, true );
+				fileLoader.xhr.open('POST', fileLoader.uploadUrl, true);
 
 				// Adding file to event's data by default - allows overwriting it by user's event listeners. (https://dev.ckeditor.com/ticket/13518)
 				evt.data.requestData.upload = { file: fileLoader.file, name: fileLoader.fileName };
-			}, null, null, 5 );
+			}, null, null, 5);
 
-			editor.on( 'fileUploadRequest', function( evt ) {
+			editor.on('fileUploadRequest', function (evt) {
 				var fileLoader = evt.data.fileLoader,
 					$formData = new FormData(),
 					requestData = evt.data.requestData,
 					configXhrHeaders = editor.config.fileTools_requestHeaders,
 					header;
 
-				for ( var name in requestData ) {
-					var value = requestData[ name ];
+				for (var name in requestData) {
+					var value = requestData[name];
 
 					// Treating files in special way
-					if ( typeof value === 'object' && value.file ) {
-						$formData.append( name, value.file, value.name );
+					if (typeof value === 'object' && value.file) {
+						$formData.append(name, value.file, value.name);
 					}
 					else {
-						$formData.append( name, value );
+						$formData.append(name, value);
 					}
 				}
 				// Append token preventing CSRF attacks.
-				$formData.append( 'ckCsrfToken', CKEDITOR.tools.getCsrfToken() );
+				$formData.append('ckCsrfToken', CKEDITOR.tools.getCsrfToken());
 
-				if ( configXhrHeaders ) {
-					for ( header in configXhrHeaders ) {
-						fileLoader.xhr.setRequestHeader( header, configXhrHeaders[ header ] );
+				if (configXhrHeaders) {
+					for (header in configXhrHeaders) {
+						fileLoader.xhr.setRequestHeader(header, configXhrHeaders[header]);
 					}
 				}
 
-				fileLoader.xhr.send( $formData );
-			}, null, null, 999 );
+				fileLoader.xhr.send($formData);
+			}, null, null, 999);
 
 			/**
 			 * Event fired when the {CKEDITOR.fileTools.fileLoader file upload} response is received and needs to be parsed.
@@ -90,38 +90,38 @@
 			 * @param {String} data.fileName The file name on server. Needs to be set in the listener &mdash; see the example above.
 			 * @param {String} data.url The URL to the uploaded file. Needs to be set in the listener &mdash; see the example above.
 			 */
-			editor.on( 'fileUploadResponse', function( evt ) {
+			editor.on('fileUploadResponse', function (evt) {
 				var fileLoader = evt.data.fileLoader,
 					xhr = fileLoader.xhr,
 					data = evt.data;
 
 				try {
-					var response = JSON.parse( xhr.responseText );
+					var response = JSON.parse(xhr.responseText);
 
 					// Error message does not need to mean that upload finished unsuccessfully.
 					// It could mean that ex. file name was changes during upload due to naming collision.
-					if ( response.error && response.error.message ) {
+					if (response.error && response.error.message) {
 						data.message = response.error.message;
 					}
 
 					// But !uploaded means error.
-					if ( !response.uploaded ) {
+					if (!response.uploaded) {
 						evt.cancel();
 					} else {
-						for ( var i in response ) {
-							data[ i ] = response[ i ];
+						for (var i in response) {
+							data[i] = response[i];
 						}
 					}
-				} catch ( err ) {
+				} catch (err) {
 					// Response parsing error.
 					data.message = fileLoader.lang.filetools.responseError;
-					CKEDITOR.warn( 'filetools-response-error', { responseText: xhr.responseText } );
+					CKEDITOR.warn('filetools-response-error', { responseText: xhr.responseText });
 
 					evt.cancel();
 				}
-			}, null, null, 999 );
+			}, null, null, 999);
 		}
-	} );
+	});
 
 	/**
 	 * File loader repository. It allows you to create and get {@link CKEDITOR.fileTools.fileLoader file loaders}.
@@ -139,7 +139,7 @@
 	 * @constructor Creates an instance of the repository.
 	 * @param {CKEDITOR.editor} editor Editor instance. Used only to get the language data.
 	 */
-	function UploadRepository( editor ) {
+	function UploadRepository(editor) {
 		this.editor = editor;
 
 		this.loaders = [];
@@ -158,16 +158,16 @@
 		 * type will be used.
 		 * @returns {CKEDITOR.fileTools.fileLoader} The created file loader instance.
 		 */
-		create: function( fileOrData, fileName, loaderType ) {
+		create: function (fileOrData, fileName, loaderType) {
 			loaderType = loaderType || FileLoader;
 
 			var id = this.loaders.length,
-				loader = new loaderType( this.editor, fileOrData, fileName );
+				loader = new loaderType(this.editor, fileOrData, fileName);
 
 			loader.id = id;
-			this.loaders[ id ] = loader;
+			this.loaders[id] = loader;
 
-			this.fire( 'instanceCreated', loader );
+			this.fire('instanceCreated', loader);
 
 			return loader;
 		},
@@ -177,9 +177,9 @@
 		 *
 		 * @returns {Boolean} `true` if all loaders finished their job, `false` otherwise.
 		 */
-		isFinished: function() {
-			for ( var id = 0; id < this.loaders.length; ++id ) {
-				if ( !this.loaders[ id ].isFinished() ) {
+		isFinished: function () {
+			for (var id = 0; id < this.loaders.length; ++id) {
+				if (!this.loaders[id].isFinished()) {
 					return false;
 				}
 			}
@@ -272,17 +272,17 @@
 	 * If not set and the second parameter is a Base64 data string, then the file name will be created based on
 	 * the {@link CKEDITOR.config#fileTools_defaultFileName} option.
 	 */
-	function FileLoader( editor, fileOrData, fileName ) {
+	function FileLoader(editor, fileOrData, fileName) {
 		var mimeParts,
 			defaultFileName = editor.config.fileTools_defaultFileName;
 
 		this.editor = editor;
 		this.lang = editor.lang;
 
-		if ( typeof fileOrData === 'string' ) {
+		if (typeof fileOrData === 'string') {
 			// Data is already loaded from disc.
 			this.data = fileOrData;
-			this.file = dataToFile( this.data );
+			this.file = dataToFile(this.data);
 			this.total = this.file.size;
 			this.loaded = this.total;
 		} else {
@@ -292,18 +292,18 @@
 			this.loaded = 0;
 		}
 
-		if ( fileName ) {
+		if (fileName) {
 			this.fileName = fileName;
-		} else if ( this.file.name ) {
+		} else if (this.file.name) {
 			this.fileName = this.file.name;
 		} else {
-			mimeParts = this.file.type.split( '/' );
+			mimeParts = this.file.type.split('/');
 
-			if ( defaultFileName ) {
-				mimeParts[ 0 ] = defaultFileName;
+			if (defaultFileName) {
+				mimeParts[0] = defaultFileName;
 			}
 
-			this.fileName = mimeParts.join( '.' );
+			this.fileName = mimeParts.join('.');
 		}
 
 		this.uploaded = 0;
@@ -313,8 +313,8 @@
 
 		this.status = 'created';
 
-		this.abort = function() {
-			this.changeStatus( 'abort' );
+		this.abort = function () {
+			this.changeStatus('abort');
 		};
 	}
 
@@ -476,21 +476,21 @@
 		 * @param {Object} [additionalRequestParameters] Additional parameters that would be passed to
 	 	 * the {@link CKEDITOR.editor#fileUploadRequest} event.
 		 */
-		loadAndUpload: function( url, additionalRequestParameters ) {
+		loadAndUpload: function (url, additionalRequestParameters) {
 			var loader = this;
 
-			this.once( 'loaded', function( evt ) {
+			this.once('loaded', function (evt) {
 				// Cancel both 'loaded' and 'update' events,
 				// because 'loaded' is terminated state.
 				evt.cancel();
 
-				loader.once( 'update', function( evt ) {
+				loader.once('update', function (evt) {
 					evt.cancel();
-				}, null, null, 0 );
+				}, null, null, 0);
 
 				// Start uploading.
-				loader.upload( url, additionalRequestParameters );
-			}, null, null, 0 );
+				loader.upload(url, additionalRequestParameters);
+			}, null, null, 0);
 
 			this.load();
 		},
@@ -504,40 +504,40 @@
 		 * * `loading`,
 		 * * `loaded`.
 		 */
-		load: function() {
+		load: function () {
 			var loader = this;
 
 			this.reader = new FileReader();
 
 			var reader = this.reader;
 
-			loader.changeStatus( 'loading' );
+			loader.changeStatus('loading');
 
-			this.abort = function() {
+			this.abort = function () {
 				loader.reader.abort();
 			};
 
-			reader.onabort = function() {
-				loader.changeStatus( 'abort' );
+			reader.onabort = function () {
+				loader.changeStatus('abort');
 			};
 
-			reader.onerror = function() {
+			reader.onerror = function () {
 				loader.message = loader.lang.filetools.loadError;
-				loader.changeStatus( 'error' );
+				loader.changeStatus('error');
 			};
 
-			reader.onprogress = function( evt ) {
+			reader.onprogress = function (evt) {
 				loader.loaded = evt.loaded;
 				loader.update();
 			};
 
-			reader.onload = function() {
+			reader.onload = function () {
 				loader.loaded = loader.total;
 				loader.data = reader.result;
-				loader.changeStatus( 'loaded' );
+				loader.changeStatus('loaded');
 			};
 
-			reader.readAsDataURL( this.file );
+			reader.readAsDataURL(this.file);
 		},
 
 		/**
@@ -553,20 +553,20 @@
 		 * @param {Object} [additionalRequestParameters] Additional data that would be passed to
 	 	 * the {@link CKEDITOR.editor#fileUploadRequest} event.
 		 */
-		upload: function( url, additionalRequestParameters ) {
+		upload: function (url, additionalRequestParameters) {
 			var requestData = additionalRequestParameters || {};
 
-			if ( !url ) {
+			if (!url) {
 				this.message = this.lang.filetools.noUrlError;
-				this.changeStatus( 'error' );
+				this.changeStatus('error');
 			} else {
 				this.uploadUrl = url;
 
 				this.xhr = new XMLHttpRequest();
 				this.attachRequestListeners();
 
-				if ( this.editor.fire( 'fileUploadRequest', { fileLoader: this, requestData: requestData } ) ) {
-					this.changeStatus( 'uploading' );
+				if (this.editor.fire('fileUploadRequest', { fileLoader: this, requestData: requestData })) {
+					this.changeStatus('uploading');
 				}
 			}
 		},
@@ -577,11 +577,11 @@
 		 * @private
 		 * @param {XMLHttpRequest} xhr XML HTTP request object.
 		 */
-		attachRequestListeners: function() {
+		attachRequestListeners: function () {
 			var loader = this,
 				xhr = this.xhr;
 
-			loader.abort = function() {
+			loader.abort = function () {
 				xhr.abort();
 				onAbort();
 			};
@@ -591,11 +591,11 @@
 
 			// https://dev.ckeditor.com/ticket/13533 - When xhr.upload is present attach onprogress, onerror and onabort functions to get actual upload
 			// information.
-			if ( xhr.upload ) {
-				xhr.upload.onprogress = function( evt ) {
-					if ( evt.lengthComputable ) {
+			if (xhr.upload) {
+				xhr.upload.onprogress = function (evt) {
+					if (evt.lengthComputable) {
 						// Set uploadTotal with correct data.
-						if ( !loader.uploadTotal ) {
+						if (!loader.uploadTotal) {
 							loader.uploadTotal = evt.total;
 						}
 						loader.uploaded = evt.loaded;
@@ -612,36 +612,36 @@
 				loader.update();
 			}
 
-			xhr.onload = function() {
+			xhr.onload = function () {
 				// https://dev.ckeditor.com/ticket/13433 - Call update at the end of the upload. When xhr.upload object is not supported there will be
 				// no update events fired during the whole process.
 				loader.update();
 
 				// https://dev.ckeditor.com/ticket/13433 - Check if loader was not aborted during last update.
-				if ( loader.status == 'abort' ) {
+				if (loader.status == 'abort') {
 					return;
 				}
 
 				loader.uploaded = loader.uploadTotal;
 
-				if ( xhr.status < 200 || xhr.status > 299 ) {
-					loader.message = loader.lang.filetools[ 'httpError' + xhr.status ];
-					if ( !loader.message ) {
-						loader.message = loader.lang.filetools.httpError.replace( '%1', xhr.status );
+				if (xhr.status < 200 || xhr.status > 299) {
+					loader.message = loader.lang.filetools['httpError' + xhr.status];
+					if (!loader.message) {
+						loader.message = loader.lang.filetools.httpError.replace('%1', xhr.status);
 					}
-					loader.changeStatus( 'error' );
+					loader.changeStatus('error');
 				} else {
 					var data = {
-							fileLoader: loader
-						},
+						fileLoader: loader
+					},
 						// Values to copy from event to FileLoader.
-						valuesToCopy = [ 'message', 'fileName', 'url' ],
-						success = loader.editor.fire( 'fileUploadResponse', data );
+						valuesToCopy = ['message', 'fileName', 'url'],
+						success = loader.editor.fire('fileUploadResponse', data);
 
-					for ( var i = 0; i < valuesToCopy.length; i++ ) {
-						var key = valuesToCopy[ i ];
-						if ( typeof data[ key ] === 'string' ) {
-							loader[ key ] = data[ key ];
+					for (var i = 0; i < valuesToCopy.length; i++) {
+						var key = valuesToCopy[i];
+						if (typeof data[key] === 'string') {
+							loader[key] = data[key];
 						}
 					}
 
@@ -650,30 +650,30 @@
 					// But without reference to the loader itself.
 					delete loader.responseData.fileLoader;
 
-					if ( success === false ) {
-						loader.changeStatus( 'error' );
+					if (success === false) {
+						loader.changeStatus('error');
 					} else {
-						loader.changeStatus( 'uploaded' );
+						loader.changeStatus('uploaded');
 					}
 				}
 			};
 
 			function onError() {
 				// Prevent changing status twice, when XHR.error and XHR.upload.onerror could be called together.
-				if ( loader.status == 'error' ) {
+				if (loader.status == 'error') {
 					return;
 				}
 
 				loader.message = loader.lang.filetools.networkError;
-				loader.changeStatus( 'error' );
+				loader.changeStatus('error');
 			}
 
 			function onAbort() {
 				// Prevent changing status twice, when XHR.onabort and XHR.upload.onabort could be called together.
-				if ( loader.status == 'abort' ) {
+				if (loader.status == 'abort') {
 					return;
 				}
-				loader.changeStatus( 'abort' );
+				loader.changeStatus('abort');
 			}
 		},
 
@@ -684,15 +684,15 @@
 		 * @private
 		 * @param {String} newStatus New status to be set.
 		 */
-		changeStatus: function( newStatus ) {
+		changeStatus: function (newStatus) {
 			this.status = newStatus;
 
-			if ( newStatus == 'error' || newStatus == 'abort' ||
-				newStatus == 'loaded' || newStatus == 'uploaded' ) {
-				this.abort = function() {};
+			if (newStatus == 'error' || newStatus == 'abort' ||
+				newStatus == 'loaded' || newStatus == 'uploaded') {
+				this.abort = function () { };
 			}
 
-			this.fire( newStatus );
+			this.fire(newStatus);
 			this.update();
 		},
 
@@ -701,8 +701,8 @@
 		 * of the upload process is out of synchronization and needs to be refreshed (e.g. because of an undo operation or
 		 * because the dialog window with the upload is closed and reopened). Fires the {@link #event-update} event.
 		 */
-		update: function() {
-			this.fire( 'update' );
+		update: function () {
+			this.fire('update');
 		},
 
 		/**
@@ -711,8 +711,8 @@
 		 *
 		 * @returns {Boolean} `true` if the loading and uploading finished.
 		 */
-		isFinished: function() {
-			return !!this.status.match( /^(?:loaded|uploaded|error|abort)$/ );
+		isFinished: function () {
+			return !!this.status.match(/^(?:loaded|uploaded|error|abort)$/);
 		}
 
 		/**
@@ -760,8 +760,8 @@
 		 */
 	};
 
-	CKEDITOR.event.implementOn( UploadRepository.prototype );
-	CKEDITOR.event.implementOn( FileLoader.prototype );
+	CKEDITOR.event.implementOn(UploadRepository.prototype);
+	CKEDITOR.event.implementOn(FileLoader.prototype);
 
 	var base64HeaderRegExp = /^data:(\S*?);base64,/;
 
@@ -770,28 +770,28 @@
 	// @private
 	// @param {String} data Base64 string data.
 	// @returns {Blob} File.
-	function dataToFile( data ) {
-		var contentType = data.match( base64HeaderRegExp )[ 1 ],
-			base64Data = data.replace( base64HeaderRegExp, '' ),
-			byteCharacters = atob( base64Data ),
+	function dataToFile(data) {
+		var contentType = data.match(base64HeaderRegExp)[1],
+			base64Data = data.replace(base64HeaderRegExp, ''),
+			byteCharacters = atob(base64Data),
 			byteArrays = [],
 			sliceSize = 512,
 			offset, slice, byteNumbers, i, byteArray;
 
-		for ( offset = 0; offset < byteCharacters.length; offset += sliceSize ) {
-			slice = byteCharacters.slice( offset, offset + sliceSize );
+		for (offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+			slice = byteCharacters.slice(offset, offset + sliceSize);
 
-			byteNumbers = new Array( slice.length );
-			for ( i = 0; i < slice.length; i++ ) {
-				byteNumbers[ i ] = slice.charCodeAt( i );
+			byteNumbers = new Array(slice.length);
+			for (i = 0; i < slice.length; i++) {
+				byteNumbers[i] = slice.charCodeAt(i);
 			}
 
-			byteArray = new Uint8Array( byteNumbers );
+			byteArray = new Uint8Array(byteNumbers);
 
-			byteArrays.push( byteArray );
+			byteArrays.push(byteArray);
 		}
 
-		return new Blob( byteArrays, { type: contentType } );
+		return new Blob(byteArrays, { type: contentType });
 	}
 
 	//
@@ -799,7 +799,7 @@
 	//
 
 	// Two plugins extend this object.
-	if ( !CKEDITOR.fileTools ) {
+	if (!CKEDITOR.fileTools) {
 		/**
 		 * Helpers to load and upload a file.
 		 *
@@ -810,7 +810,7 @@
 		CKEDITOR.fileTools = {};
 	}
 
-	CKEDITOR.tools.extend( CKEDITOR.fileTools, {
+	CKEDITOR.tools.extend(CKEDITOR.fileTools, {
 		uploadRepository: UploadRepository,
 		fileLoader: FileLoader,
 
@@ -840,16 +840,16 @@
 		 * @param {String} [type] Upload file type.
 		 * @returns {String/null} Upload URL or `null` if none of the configuration options were defined.
 		 */
-		getUploadUrl: function( config, type ) {
+		getUploadUrl: function (config, type) {
 			var capitalize = CKEDITOR.tools.capitalize;
 
-			if ( type && config[ type + 'UploadUrl' ] ) {
-				return config[ type + 'UploadUrl' ];
-			} else if ( config.uploadUrl ) {
+			if (type && config[type + 'UploadUrl']) {
+				return config[type + 'UploadUrl'];
+			} else if (config.uploadUrl) {
 				return config.uploadUrl;
-			} else if ( type && config[ 'filebrowser' + capitalize( type, 1 ) + 'UploadUrl' ] ) {
-				return config[ 'filebrowser' + capitalize( type, 1 ) + 'UploadUrl' ] + '&responseType=json';
-			} else if ( config.filebrowserUploadUrl ) {
+			} else if (type && config['filebrowser' + capitalize(type, 1) + 'UploadUrl']) {
+				return config['filebrowser' + capitalize(type, 1) + 'UploadUrl'] + '&responseType=json';
+			} else if (config.filebrowserUploadUrl) {
 				return config.filebrowserUploadUrl + '&responseType=json';
 			}
 
@@ -866,8 +866,8 @@
 		 * @param {RegExp} supportedTypes A regular expression to check the MIME type of the file.
 		 * @returns {Boolean} `true` if the file type is supported.
 		 */
-		isTypeSupported: function( file, supportedTypes ) {
-			return !!file.type.match( supportedTypes );
+		isTypeSupported: function (file, supportedTypes) {
+			return !!file.type.match(supportedTypes);
 		},
 
 		/**
@@ -876,16 +876,16 @@
 		 * @since 4.9.0
 		 * @property {Boolean} isFileUploadSupported
 		 */
-		isFileUploadSupported: ( function() {
+		isFileUploadSupported: (function () {
 			return typeof FileReader === 'function' &&
-				typeof ( new FileReader() ).readAsDataURL === 'function' &&
+				typeof (new FileReader()).readAsDataURL === 'function' &&
 				typeof FormData === 'function' &&
-				typeof ( new FormData() ).append === 'function' &&
+				typeof (new FormData()).append === 'function' &&
 				typeof XMLHttpRequest === 'function' &&
 				typeof Blob === 'function';
-		} )()
-	} );
-} )();
+		})()
+	});
+})();
 
 /**
  * The URL where files should be uploaded.
