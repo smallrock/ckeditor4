@@ -240,7 +240,7 @@
 					},
 
 					img: {
-						attributes: '!src,srcset,alt,width,sizes'
+						attributes: '!src,srcset,alt,width,height,sizes'
 					}
 				},
 
@@ -324,19 +324,21 @@
 
 					this.on('uploadDone', function (evt) {
 						var loader = evt.data.loader,
-							resp = loader.responseData.response,
-							srcset = CKEDITOR.plugins.easyimage._parseSrcSet(resp);
-
+							resp = loader.responseData.response;
+						//srcset = CKEDITOR.plugins.easyimage._parseSrcSet(resp);
 						this.parts.image.setAttributes({
 							'data-cke-saved-src': resp['default'],
 							src: resp['default'],
-							srcset: srcset,
-							sizes: '100vw'
+							srcset: "",
+							width: resp.width,
+							height: resp.height,
+							sizes: resp['sizes']
 						});
 					});
 
-					this.on('uploadFailed', function () {
-						alert(this.editor.lang.easyimage.uploadFailed); // jshint ignore:line
+					this.on('uploadFailed', function (evt) {
+						// console.log(evt.data.loader.message);
+						alert(evt.data.loader.message); // jshint ignore:line
 					});
 
 					this._loadDefaultStyle();
@@ -489,6 +491,7 @@
 					continue;
 				}
 
+				// fixed 不需要这个了，他们demo是多个尺寸的图片
 				srcset.push(srcs[src] + ' ' + src + 'w');
 			}
 

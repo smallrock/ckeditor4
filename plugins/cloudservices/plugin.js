@@ -84,8 +84,9 @@
 
 					refreshToken: function () {
 						CKEDITOR.ajax.load(tokenUrl, function (token) {
-							if (token) {
-								tokenFetcher.token = token;
+							var tokenObj = JSON.parse(token);
+							if (tokenObj) {
+								tokenFetcher.token = tokenObj["uptoken"];
 							}
 						});
 					},
@@ -123,7 +124,8 @@
 						return;
 					}
 					// Add authorization token.
-					evt.data.fileLoader.xhr.setRequestHeader('Authorization', token);
+					//evt.data.fileLoader.xhr.setRequestHeader('Authorization', token);
+					evt.data.fileLoader.token = token;
 				}
 			}, null, null, 6);
 
@@ -137,8 +139,13 @@
 
 					try {
 						response = JSON.parse(xhr.responseText);
-
-						evt.data.response = response;
+						evt.data.response = {
+							"default": editor.config.buckets[response.bucket] + response.key,
+							"alt": "",
+							"width": response.width,
+							"height": response.height,
+							"sizes": response.size
+						};
 					} catch (e) {
 						CKEDITOR.warn('filetools-response-error', { responseText: xhr.responseText });
 					}

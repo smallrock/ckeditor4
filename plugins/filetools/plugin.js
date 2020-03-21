@@ -72,6 +72,12 @@
 					}
 				}
 
+				// 上传令牌
+				$formData.append('token', fileLoader.token);
+
+				// 随机文件名
+				$formData.append("key", Math.random().toString(36).substr(2) + "_" + new Date().getTime() + "." + fileLoader.fileName.split('.').pop());
+
 				fileLoader.xhr.send($formData);
 			}, null, null, 999);
 
@@ -629,6 +635,7 @@
 					if (!loader.message) {
 						loader.message = loader.lang.filetools.httpError.replace('%1', xhr.status);
 					}
+					console.log(loader)
 					loader.changeStatus('error');
 				} else {
 					var data = {
@@ -637,7 +644,7 @@
 						// Values to copy from event to FileLoader.
 						valuesToCopy = ['message', 'fileName', 'url'],
 						success = loader.editor.fire('fileUploadResponse', data);
-
+					//console.log(success, data)
 					for (var i = 0; i < valuesToCopy.length; i++) {
 						var key = valuesToCopy[i];
 						if (typeof data[key] === 'string') {
